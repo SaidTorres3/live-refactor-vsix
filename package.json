@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:rename-preview.helloWorld"
+        "onCommand:rename-preview.liveRefactor"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "rename-preview.helloWorld",
-				"title": "Hello World"
+				"command": "rename-preview.liveRefactor",
+				"title": "Live Refactor"
 			}
 		]
 	},
