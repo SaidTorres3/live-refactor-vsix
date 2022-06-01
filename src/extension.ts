@@ -1,6 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+// import libraries to read file
+import * as fs from "fs";
+import * as path from "path";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -36,112 +39,12 @@ export function activate(context: vscode.ExtensionContext) {
         }
       );
 
-      // add button to the webview
-      panel.webview.html = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Preview</title>
-  </head>
-  <style>
-    header {
-      border: 1px solid red;
-      padding: 10px;
-    }
-
-    .inputs-container {
-      margin: 10px 0;
-    }
-
-    .text {
-      border: 1px solid blue;
-      padding: 10px;
-    }
-  </style>
-  <body>
-    <script>
-      const addVariable = () => {
-        const variablesElement = document.getElementById("variables");
-
-        const inputsContainer= document.createElement("div");
-        inputsContainer.classList.add("inputs-container");
-
-        const variableSpan = document.createElement("span");
-        variableSpan.innerHTML = "Variable: ";
-        inputsContainer.appendChild(variableSpan);
-
-        const variableInput = document.createElement("input");
-        variableInput.type = "text";
-        variableInput.name = "variable";
-        variableInput.classList.add("variableInput");
-        inputsContainer.appendChild(variableInput);
-
-        const valueSpan = document.createElement("span");
-        valueSpan.innerHTML = " Value: ";
-        inputsContainer.appendChild(valueSpan);
-
-        const valueInput = document.createElement("input");
-        valueInput.type = "text";
-        valueInput.name = "value";
-        valueInput.classList.add("valueInput");
-        inputsContainer.appendChild(valueInput);
-
-        variablesElement.appendChild(inputsContainer);
-      };
-    </script>
-    <header class="header">
-      <div id="variables" class="variables">
-        <div class="inputs-container">
-          <span class="variable">Variable:</span>
-          <input type="text" class="variableInput" />
-          <span class="value">Value:</span>
-          <input type="text" class="valueInput"/>
-        </div>
-      </div>
-      <button onclick="addVariable()">Add</button>
-    </header>
-
-    <div class="text">
-      <p id="text">${editor?.document.getText()}</p>
-    </div>
-    <script>
-      let originalTxt = document.getElementById("text").innerHTML;
-      window.addEventListener("message", (event) => {
-        const txt = event.data.txt;
-        originalTxt = txt;
-        document.getElementById("text").innerHTML = txt;
-				replaceVariables();
-      });
-
-      const replaceVariables = () => {
-        const variables = document.getElementsByClassName("variableInput");
-        const values = document.getElementsByClassName("valueInput");
-
-        const textElement = document.getElementById("text");
-        let text = originalTxt
-
-        for (let i = 0; i < variables.length; i++) {
-          const variable = variables[i].value;
-          const value = values[i].value;
-
-          text = text.replace(variable, value);
-          console.log(text);
-        }
-
-        textElement.innerHTML = text;
-      };
-
-      window.addEventListener("input", () => {
-        console.log('trig')
-        replaceVariables();
-      });
-    </script>
-  </body>
-</html>
-
-					`;
+      // set ./preview.html as the webview's html content
+      const previewFile = path.join(context.extensionPath, "src", "preview.html");
+      let preview = fs.readFileSync(previewFile, "utf8");
+      preview = preview.replace("${text}", editor?.document?.getText()||"");
+      
+      panel.webview.html = preview;
 
       // update the text of the preview when the document changes
 			vscode.workspace.onDidChangeTextDocument(
