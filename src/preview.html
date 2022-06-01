@@ -1,106 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    // allow scritps to be loaded from ./libs/react
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; script-src ${webview.cspSource}; style-src ${webview.cspSource};" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Preview</title>
+    <script nonce="${nonce}" src="${scriptUri1}" crossorigin></script>
+    <script nonce="${nonce}" src="${scriptUri2}"></script>
+    <script nonce="${nonce}" src="${scriptUri3}" crossorigin></script>
+    <style>
+      .variables {
+        border: 1px solid red;
+        padding: 10px;
+        margin-bottom: 5px;
+      }
+
+      .inputs-container {
+        margin: 10px 0;
+      }
+
+      .remove-button {
+        margin-left: 10px;
+        border: 1px solid red;
+        padding: 5px;
+        cursor: pointer;
+      }
+
+      .text {
+        border: 1px solid blue;
+        padding: 10px;
+      }
+
+      p {
+        white-space: pre-wrap;
+      }
+    </style>
   </head>
-  <style>
-    header {
-      border: 1px solid red;
-      padding: 10px;
-    }
-
-    .inputs-container {
-      margin: 10px 0;
-    }
-
-    .text {
-      border: 1px solid blue;
-      padding: 10px;
-    }
-
-    p {
-      white-space: pre-wrap;
-    }
-  </style>
   <body>
-    <script>
-      const addVariable = () => {
-        const variablesElement = document.getElementById("variables");
+    <div id="app"></div>
 
-        const inputsContainer= document.createElement("div");
-        inputsContainer.classList.add("inputs-container");
+    <script type="text/babel">
+      const container = document.getElementById("app");
+      const root = ReactDOM.createRoot(container);
 
-        const variableSpan = document.createElement("span");
-        variableSpan.innerHTML = "Variable: ";
-        inputsContainer.appendChild(variableSpan);
+      function Hello() {
+        const [text, setText] = React.useState("");
+        const [originalText, setOriginalText] = React.useState("");
+        const [variables, setVariables] = React.useState([
+          {
+            name: "",
+            value: "",
+          },
+        ]);
 
-        const variableInput = document.createElement("input");
-        variableInput.type = "text";
-        variableInput.name = "variable";
-        variableInput.classList.add("variableInput");
-        inputsContainer.appendChild(variableInput);
+        window.addEventListener("message", (event) => {
+          const txt = event.data.txt;
+          setOriginalText(txt);
+          setText(txt);
+        });
 
-        const valueSpan = document.createElement("span");
-        valueSpan.innerHTML = " Value: ";
-        inputsContainer.appendChild(valueSpan);
+        const updateVariablesValues = (e, index) => {
+          setVariables((prev) => {
+            console.log(e.target.value);
+            let previous = [...prev];
+            if (e.target.name === "variable") {
+              previous[index].name = e.target.value;
+            } else {
+              previous[index].value = e.target.value;
+            }
+            return previous;
+          });
+        };
 
-        const valueInput = document.createElement("input");
-        valueInput.type = "text";
-        valueInput.name = "value";
-        valueInput.classList.add("valueInput");
-        inputsContainer.appendChild(valueInput);
+        React.useEffect(() => {
+          replaceVariablesToValues();
+        }, [variables]);
 
-        variablesElement.appendChild(inputsContainer);
-      };
-    </script>
-    <header class="header">
-      <div id="variables" class="variables">
-        <div class="inputs-container">
-          <span class="variable">Variable:</span>
-          <input type="text" class="variableInput" />
-          <span class="value">Value:</span>
-          <input type="text" class="valueInput"/>
-        </div>
-      </div>
-      <button onclick="addVariable()">Add</button>
-    </header>
+        const replaceVariablesToValues = () => {
+          let o_text = originalText;
+          variables.forEach((variable) => {
+            o_text = o_text.replace(
+              new RegExp(variable.name, "g"),
+              variable.value||""
+            );
+          });
+          setText(o_text);
+        };
 
-    <div class="text">
-      <p id="text">${text}</p>
-    </div>
-    <script>
-      let originalTxt = document.getElementById("text").innerHTML;
-      window.addEventListener("message", (event) => {
-        const txt = event.data.txt;
-        originalTxt = txt;
-        document.getElementById("text").innerHTML = txt;
-				replaceVariables();
-      });
+        const addVariable = () => {
+          setVariables((prev) => [
+            ...prev,
+            {
+              name: "",
+              value: "",
+            },
+          ]);
+        };
 
-      const replaceVariables = () => {
-        const variables = document.getElementsByClassName("variableInput");
-        const values = document.getElementsByClassName("valueInput");
+        const removeVariable = (index) => {
+          setVariables((prev) => {
+            let previous = [...prev];
+            previous.splice(index, 1);
+            return previous;
+          });
+        };
 
-        const textElement = document.getElementById("text");
-        let text = originalTxt
+        return (
+          <div>
+            <div className="header">
+              <div className="variables">
+                {variables.map((item, index) => (
+                  <div key={index} className="inputs-container">
+                    <span className="variable">Variable: </span>
+                    <input
+                      type="text"
+                      name="variable"
+                      value={item.name}
+                      onChange={(e) => {
+                        updateVariablesValues(e, index);
+                      }}
+                    />
+                    <span className="value"> Value: </span>
+                    <input
+                      type="text"
+                      name="value"
+                      value={item.value}
+                      onChange={(e) => {
+                        updateVariablesValues(e, index);
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        removeVariable(index);
+                      }}
+                      className="remove-button"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => addVariable()}>Add</button>
+              </div>
+            </div>
 
-        for (let i = 0; i < variables.length; i++) {
-          const variable = variables[i].value;
-          const value = values[i].value;
+            <div className="text">
+              <p id="text">{text}</p>
+            </div>
+          </div>
+        );
+      }
 
-          text = text.replace(variable, value);
-          console.log(text);
-        }
-
-        textElement.innerHTML = text;
-      };
-
-      window.addEventListener("input", () => {
-        console.log('trig')
-        replaceVariables();
-      });
+      root.render(<Hello />);
     </script>
   </body>
 </html>
