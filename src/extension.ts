@@ -67,7 +67,6 @@ export function activate(context: vscode.ExtensionContext) {
       <!DOCTYPE html>
       <html lang="en">
         <head>
-          // allow scritps to be loaded from ./libs/react
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} https:; script-src ${panel.webview.cspSource}; style-src ${panel.webview.cspSource};" />
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
