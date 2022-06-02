@@ -42,7 +42,7 @@
       const container = document.getElementById("app");
       const root = ReactDOM.createRoot(container);
 
-      function Hello() {
+      function App() {
         const [text, setText] = React.useState("");
         const [originalText, setOriginalText] = React.useState("");
         const [variables, setVariables] = React.useState([
@@ -60,7 +60,6 @@
 
         const updateVariablesValues = (e, index) => {
           setVariables((prev) => {
-            console.log(e.target.value);
             let previous = [...prev];
             if (e.target.name === "variable") {
               previous[index].name = e.target.value;
@@ -78,11 +77,10 @@
         const replaceVariablesToValues = () => {
           let o_text = originalText;
           variables.forEach((variable) => {
-            if(variable.name) {
-              o_text = o_text.replace(
-                new RegExp(variable.name, "gi"),
-                variable.value||""
-              );
+            if (variable.name) {
+              while (o_text.indexOf(variable.name) !== -1) {
+                o_text = o_text.replace(variable.name, variable.value);
+              }
             }
           });
           setText(o_text);
@@ -151,7 +149,7 @@
         );
       }
 
-      root.render(<Hello />);
+      root.render(<App />);
     </script>
   </body>
 </html>
