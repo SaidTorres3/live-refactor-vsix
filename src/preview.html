@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    // allow scritps to be loaded from ./libs/react
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; script-src ${webview.cspSource}; style-src ${webview.cspSource};" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Preview</title>
@@ -75,15 +73,17 @@
 
         React.useEffect(() => {
           replaceVariablesToValues();
-        }, [variables]);
+        }, [variables, originalText]);
 
         const replaceVariablesToValues = () => {
           let o_text = originalText;
           variables.forEach((variable) => {
-            o_text = o_text.replace(
-              new RegExp(variable.name, "g"),
-              variable.value||""
-            );
+            if(variable.name) {
+              o_text = o_text.replace(
+                new RegExp(variable.name, "gi"),
+                variable.value||""
+              );
+            }
           });
           setText(o_text);
         };
