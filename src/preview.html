@@ -3,153 +3,371 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Preview</title>
-    <script nonce="${nonce}" src="${scriptUri1}" crossorigin></script>
-    <script nonce="${nonce}" src="${scriptUri2}"></script>
-    <script nonce="${nonce}" src="${scriptUri3}" crossorigin></script>
+    <title>Live Refactor Preview</title>
     <style>
-      .variables {
-        border: 1px solid red;
-        padding: 10px;
-        margin-bottom: 5px;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
 
-      .inputs-container {
-        margin: 10px 0;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: var(--vscode-editor-background);
+        color: var(--vscode-editor-foreground);
+        padding: 20px;
+        line-height: 1.6;
       }
 
-      .remove-button {
-        margin-left: 10px;
-        border: 1px solid red;
-        padding: 5px;
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: var(--vscode-editorWidget-background);
+        border: 1px solid var(--vscode-editorWidget-border);
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h2 {
+        color: var(--vscode-foreground);
+        margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .header h2::before {
+        content: '⚙️';
+        font-size: 20px;
+      }
+
+      .variables-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .variable-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 16px;
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-input-border);
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .variable-item:hover {
+        border-color: var(--vscode-focusBorder);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .variable-item label {
+        font-weight: 500;
+        color: var(--vscode-foreground);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .variable-item input {
+        background: var(--vscode-input-background);
+        color: var(--vscode-input-foreground);
+        border: 1px solid var(--vscode-input-border);
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-family: var(--vscode-editor-font-family);
+        transition: border-color 0.2s ease;
+      }
+
+      .variable-item input:focus {
+        outline: none;
+        border-color: var(--vscode-focusBorder);
+        box-shadow: 0 0 0 2px var(--vscode-focusBorder, rgba(14, 99, 156, 0.2));
+      }
+
+      .variable-item input::placeholder {
+        color: var(--vscode-input-placeholderForeground);
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
         cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
       }
 
-      .text {
-        border: 1px solid blue;
-        padding: 10px;
+      .btn-primary {
+        background: var(--vscode-button-background);
+        color: var(--vscode-button-foreground);
       }
 
-      p {
+      .btn-primary:hover {
+        background: var(--vscode-button-hoverBackground);
+      }
+
+      .btn-danger {
+        background: transparent;
+        color: var(--vscode-errorForeground);
+        border: 1px solid var(--vscode-errorForeground);
+        padding: 6px 12px;
+      }
+
+      .btn-danger:hover {
+        background: var(--vscode-errorForeground);
+        color: var(--vscode-editor-background);
+      }
+
+      .btn-add {
+        margin-top: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-add::before {
+        content: '+';
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .preview-section {
+        background: var(--vscode-editorWidget-background);
+        border: 1px solid var(--vscode-editorWidget-border);
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .preview-section h2 {
+        color: var(--vscode-foreground);
+        margin-bottom: 16px;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .preview-section h2::before {
+        content: '👁️';
+        font-size: 20px;
+      }
+
+      .preview-content {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-input-border);
+        border-radius: 6px;
+        padding: 20px;
+        min-height: 200px;
+        font-family: var(--vscode-editor-font-family);
+        font-size: 14px;
+        line-height: 1.8;
         white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+      }
+
+      .empty-state {
+        color: var(--vscode-descriptionForeground);
+        font-style: italic;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      @media (max-width: 768px) {
+        .variable-item {
+          grid-template-columns: 1fr;
+        }
+
+        .variable-item label {
+          margin-top: 8px;
+        }
+      }
+
+      /* Smooth animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .variable-item {
+        animation: fadeIn 0.3s ease;
       }
     </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div class="container">
+      <div class="header">
+        <h2>Variables</h2>
+        <div class="variables-list" id="variables-list"></div>
+        <button class="btn btn-primary btn-add" id="add-variable-btn">Add Variable</button>
+      </div>
 
-    <script type="text/babel">
-      const container = document.getElementById("app");
-      const root = ReactDOM.createRoot(container);
+      <div class="preview-section">
+        <h2>Preview</h2>
+        <div class="preview-content" id="preview-content">
+          <div class="empty-state">No content to preview yet...</div>
+        </div>
+      </div>
+    </div>
 
-      function App() {
-        const [text, setText] = React.useState("");
-        const [originalText, setOriginalText] = React.useState("");
-        const [variables, setVariables] = React.useState([
-          {
-            name: "",
-            value: "",
-          },
-        ]);
+    <script>
+      // State management
+      let state = {
+        originalText: '',
+        variables: [{ name: '', value: '' }]
+      };
 
-        window.addEventListener("message", (event) => {
-          const txt = event.data.txt;
-          setOriginalText(txt);
-          setText(txt);
-        });
+      // DOM elements
+      const variablesList = document.getElementById('variables-list');
+      const previewContent = document.getElementById('preview-content');
+      const addVariableBtn = document.getElementById('add-variable-btn');
 
-        const updateVariablesValues = (e, index) => {
-          setVariables((prev) => {
-            let previous = [...prev];
-            if (e.target.name === "variable") {
-              previous[index].name = e.target.value;
-            } else {
-              previous[index].value = e.target.value;
-            }
-            return previous;
-          });
-        };
+      // Listen for messages from the extension
+      window.addEventListener('message', (event) => {
+        const txt = event.data.txt;
+        state.originalText = txt;
+        render();
+      });
 
-        React.useEffect(() => {
-          replaceVariablesToValues();
-        }, [variables, originalText]);
-
-        const replaceVariablesToValues = () => {
-          let o_text = originalText;
-          variables.forEach((variable) => {
-            if (variable.name) {
-              while (o_text.indexOf(variable.name) !== -1) {
-                o_text = o_text.replace(variable.name, variable.value);
-              }
-            }
-          });
-          setText(o_text);
-        };
-
-        const addVariable = () => {
-          setVariables((prev) => [
-            ...prev,
-            {
-              name: "",
-              value: "",
-            },
-          ]);
-        };
-
-        const removeVariable = (index) => {
-          setVariables((prev) => {
-            let previous = [...prev];
-            previous.splice(index, 1);
-            return previous;
-          });
-        };
-
-        return (
-          <div>
-            <div className="header">
-              <div className="variables">
-                {variables.map((item, index) => (
-                  <div key={index} className="inputs-container">
-                    <span className="variable">Variable: </span>
-                    <input
-                      type="text"
-                      name="variable"
-                      value={item.name}
-                      onChange={(e) => {
-                        updateVariablesValues(e, index);
-                      }}
-                    />
-                    <span className="value"> Value: </span>
-                    <input
-                      type="text"
-                      name="value"
-                      value={item.value}
-                      onChange={(e) => {
-                        updateVariablesValues(e, index);
-                      }}
-                    />
-                    <button
-                      onClick={() => {
-                        removeVariable(index);
-                      }}
-                      className="remove-button"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button onClick={() => addVariable()}>Add</button>
-              </div>
-            </div>
-
-            <div className="text">
-              <p id="text">{text}</p>
-            </div>
-          </div>
-        );
+      // Update variable value
+      function updateVariable(index, field, value) {
+        state.variables[index][field] = value;
+        renderPreview(); // Only update preview, not the inputs
       }
 
-      root.render(<App />);
+      // Add new variable
+      function addVariable() {
+        state.variables.push({ name: '', value: '' });
+        render();
+      }
+
+      // Remove variable
+      function removeVariable(index) {
+        if (state.variables.length > 1) {
+          state.variables.splice(index, 1);
+        } else {
+          state.variables[0] = { name: '', value: '' };
+        }
+        render();
+      }
+
+      // Replace variables in text
+      function replaceVariables() {
+        let text = state.originalText;
+        
+        state.variables.forEach((variable) => {
+          if (variable.name && variable.value) {
+            const regex = new RegExp(escapeRegExp(variable.name), 'g');
+            text = text.replace(regex, variable.value);
+          }
+        });
+        
+        return text;
+      }
+
+      // Escape special regex characters
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      // Render variables list
+      function renderVariables() {
+        variablesList.innerHTML = '';
+        
+        state.variables.forEach((variable, index) => {
+          const variableItem = document.createElement('div');
+          variableItem.className = 'variable-item';
+          
+          variableItem.innerHTML = `
+            <label>Variable:</label>
+            <input 
+              type="text" 
+              placeholder="Enter variable name..."
+              value="${variable.name}"
+              data-index="${index}"
+              data-field="name"
+            />
+            <label>Value:</label>
+            <input 
+              type="text" 
+              placeholder="Enter replacement value..."
+              value="${variable.value}"
+              data-index="${index}"
+              data-field="value"
+            />
+            <button 
+              class="btn btn-danger" 
+              data-index="${index}"
+              title="Remove variable"
+            >
+              ✕
+            </button>
+          `;
+          
+          // Add event listeners
+          const inputs = variableItem.querySelectorAll('input');
+          inputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+              const index = parseInt(e.target.dataset.index);
+              const field = e.target.dataset.field;
+              updateVariable(index, field, e.target.value);
+            });
+          });
+          
+          const removeBtn = variableItem.querySelector('button');
+          removeBtn.addEventListener('click', () => {
+            const index = parseInt(removeBtn.dataset.index);
+            removeVariable(index);
+          });
+          
+          variablesList.appendChild(variableItem);
+        });
+      }
+
+      // Render preview
+      function renderPreview() {
+        const text = replaceVariables();
+        
+        if (text) {
+          previewContent.textContent = text;
+        } else {
+          previewContent.innerHTML = '<div class="empty-state">No content to preview yet...</div>';
+        }
+      }
+
+      // Main render function
+      function render() {
+        renderVariables();
+        renderPreview();
+      }
+
+      // Add variable button event
+      addVariableBtn.addEventListener('click', addVariable);
+
+      // Initial render
+      render();
     </script>
   </body>
 </html>
