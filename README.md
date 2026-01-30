@@ -1,71 +1,97 @@
-# rename-preview README
+# Live Refactor
 
-This is the README file for your extension "rename-preview". After writing up a brief description, we recommend including the following sections.
+A powerful VS Code extension for live text refactoring with variable substitution. Preview your changes in real-time as you define variables and their replacement values.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- 🔄 **Real-time Preview**: See your text transformations instantly as you type
+- 📝 **Multiple Variables**: Define unlimited variable substitutions
+- 🎯 **Case Sensitivity**: Toggle case-sensitive matching per variable
+- 📋 **One-Click Copy**: Copy the refactored result to clipboard with a single click
+- 💾 **State Persistence**: Your variables and settings persist even when moving tabs
+- 🎨 **Clean Modern UI**: Beautiful interface that integrates seamlessly with VS Code themes
+- ⚡ **Vanilla JavaScript**: Lightweight implementation with zero dependencies
 
-For example if there is an image subfolder under your extension project workspace:
+## Usage
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Open any text file in VS Code
+2. Run the command **"Live Refactor"** from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+3. A preview panel will open showing your current file content
+4. Define variables and their replacement values:
+   - Enter the variable name you want to find
+   - Enter the value you want to replace it with
+   - Optionally enable "Case Sensitive" for exact case matching
+5. See the live preview update automatically
+6. Click **Copy** to copy the refactored text to your clipboard
+7. Add or remove variables as needed using the **Add Variable** and **✕** buttons
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Example
+
+**Original Text:**
+```
+Hello USER_NAME, welcome to PRODUCT_NAME!
+Your account user_name has been created.
+```
+
+**Variable Definitions:**
+- Variable: `USER_NAME` → Value: `John Doe` (Case Sensitive: ✓)
+- Variable: `user_name` → Value: `john.doe` (Case Sensitive: ✓)
+- Variable: `PRODUCT_NAME` → Value: `Amazing App`
+
+**Result:**
+```
+Hello John Doe, welcome to Amazing App!
+Your account john.doe has been created.
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `Live Refactor` | Opens the live refactor preview panel |
+
+## Installation
+
+### From Source
+1. Clone this repository
+2. Run `npm install` (optional, no dependencies required for runtime)
+3. Press `F5` to open a new VS Code window with the extension loaded
+4. Open any file and run the "Live Refactor" command
+
+### From VSIX
+1. Package the extension: `vsce package`
+2. Install the `.vsix` file: `code --install-extension rename-preview-*.vsix`
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+- VS Code version 1.67.0 or higher
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+None at the moment. Please report any issues on the [GitHub repository](https://github.com/SaidTorres3/live-refactor-vsix/issues).
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
+Initial release of Live Refactor:
+- Real-time variable substitution preview
+- Multiple variable support
+- Case-sensitive toggle per variable
+- Copy to clipboard functionality
+- State persistence across tab movements
+- Modern, theme-aware UI
+- Vanilla JavaScript implementation (no React, no build step required)
 
-### 1.0.1
+## Contributing
 
-Fixed issue #.
+Contributions are welcome! Feel free to submit issues and pull requests on the [GitHub repository](https://github.com/SaidTorres3/live-refactor-vsix).
 
-### 1.1.0
+## License
 
-Added features X, Y, and Z.
+See LICENSE file for details.
 
 ---
 
-## Following extension guidelines
+**Enjoy refactoring with Live Refactor!** 🚀
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code&#39;s Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
