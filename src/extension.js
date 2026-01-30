@@ -34,11 +34,24 @@ function activate(context) {
 
       const setText = (text) => {
         panel.webview.postMessage({
-          txt: text,
+          command: 'setText',
+          text: text,
         });
       };
 
-      setText(editor?.document?.getText() || "");
+      // Listen for messages from the webview
+      panel.webview.onDidReceiveMessage(
+        message => {
+          switch (message.command) {
+            case 'ready':
+              // Webview is ready, send the initial text
+              setText(editor?.document?.getText() || "");
+              break;
+          }
+        },
+        undefined,
+        context.subscriptions
+      );
 
       vscode.workspace.onDidChangeTextDocument((e) => {
         setText(e.document.getText());

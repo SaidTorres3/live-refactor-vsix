@@ -57,7 +57,7 @@
 
       .variable-item {
         display: grid;
-        grid-template-columns: auto 1fr auto 1fr auto;
+        grid-template-columns: auto 1fr auto 1fr auto auto auto;
         gap: 12px;
         align-items: center;
         padding: 16px;
@@ -65,6 +65,25 @@
         border: 1px solid var(--vscode-input-border);
         border-radius: 6px;
         transition: all 0.2s ease;
+      }
+
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .checkbox-container input[type="checkbox"] {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+      }
+
+      .checkbox-container label {
+        cursor: pointer;
+        font-size: 12px;
+        margin: 0;
       }
 
       .variable-item:hover {
@@ -161,11 +180,41 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        justify-content: space-between;
       }
 
       .preview-section h2::before {
         content: '👁️';
         font-size: 20px;
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-copy {
+        background: var(--vscode-button-secondaryBackground);
+        color: var(--vscode-button-secondaryForeground);
+        padding: 6px 12px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-copy:hover {
+        background: var(--vscode-button-secondaryHoverBackground);
+      }
+
+      .btn-copy::before {
+        content: '📋';
+        font-size: 16px;
+      }
+
+      .btn-copy.copied::before {
+        content: '✓';
       }
 
       .preview-content {
@@ -225,7 +274,12 @@
       </div>
 
       <div class="preview-section">
-        <h2>Preview</h2>
+        <h2>
+          <div class="preview-header">
+            <span>Preview</span>
+          </div>
+          <button class="btn btn-copy" id="copy-btn">Copy</button>
+        </h2>
         <div class="preview-content" id="preview-content">
           <div class="empty-state">No content to preview yet...</div>
         </div>
@@ -236,30 +290,53 @@
       // State management
       let state = {
         originalText: '',
-        variables: [{ name: '', value: '' }]
+        variables: [{ name: '', value: '', caseSensitive: false }]
       };
 
       // DOM elements
       const variablesList = document.getElementById('variables-list');
       const previewContent = document.getElementById('preview-content');
       const addVariableBtn = document.getElementById('add-variable-btn');
+      const copyBtn = document.getElementById('copy-btn');
+
+      // VS Code API
+      const vscode = acquireVsCodeApi();
+
+      // Restore previous state if available
+      const previousState = vscode.getState();
+      if (previousState) {
+        state = previousState;
+      }
 
       // Listen for messages from the extension
       window.addEventListener('message', (event) => {
-        const txt = event.data.txt;
-        state.originalText = txt;
-        render();
+        const message = event.data;
+        if (message.command === 'setText') {
+          state.originalText = message.text;
+          saveState();
+          render();
+        }
       });
+
+      // Save state to VS Code
+      function saveState() {
+        vscode.setState(state);
+      }
+
+      // Notify extension that webview is ready
+      vscode.postMessage({ command: 'ready' });
 
       // Update variable value
       function updateVariable(index, field, value) {
         state.variables[index][field] = value;
+        saveState();
         renderPreview(); // Only update preview, not the inputs
       }
 
       // Add new variable
       function addVariable() {
-        state.variables.push({ name: '', value: '' });
+        state.variables.push({ name: '', value: '', caseSensitive: false });
+        saveState();
         render();
       }
 
@@ -268,8 +345,9 @@
         if (state.variables.length > 1) {
           state.variables.splice(index, 1);
         } else {
-          state.variables[0] = { name: '', value: '' };
+          state.variables[0] = { name: '', value: '', caseSensitive: false };
         }
+        saveState();
         render();
       }
 
@@ -279,8 +357,13 @@
         
         state.variables.forEach((variable) => {
           if (variable.name && variable.value) {
-            const regex = new RegExp(escapeRegExp(variable.name), 'g');
-            text = text.replace(regex, variable.value);
+            if (variable.caseSensitive) {
+              const regex = new RegExp(escapeRegExp(variable.name), 'g');
+              text = text.replace(regex, variable.value);
+            } else {
+              const regex = new RegExp(escapeRegExp(variable.name), 'gi');
+              text = text.replace(regex, variable.value);
+            }
           }
         });
         
@@ -317,6 +400,16 @@
               data-index="${index}"
               data-field="value"
             />
+            <div class="checkbox-container">
+              <input 
+                type="checkbox" 
+                id="case-${index}"
+                ${variable.caseSensitive ? 'checked' : ''}
+                data-index="${index}"
+                data-field="caseSensitive"
+              />
+              <label for="case-${index}">Case Sensitive</label>
+            </div>
             <button 
               class="btn btn-danger" 
               data-index="${index}"
@@ -326,14 +419,22 @@
             </button>
           `;
           
-          // Add event listeners
-          const inputs = variableItem.querySelectorAll('input');
+          // Add event listeners for text inputs
+          const inputs = variableItem.querySelectorAll('input[type="text"]');
           inputs.forEach(input => {
             input.addEventListener('input', (e) => {
               const index = parseInt(e.target.dataset.index);
               const field = e.target.dataset.field;
               updateVariable(index, field, e.target.value);
             });
+          });
+          
+          // Add event listener for checkbox
+          const checkbox = variableItem.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener('change', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            const field = e.target.dataset.field;
+            updateVariable(index, field, e.target.checked);
           });
           
           const removeBtn = variableItem.querySelector('button');
@@ -365,6 +466,23 @@
 
       // Add variable button event
       addVariableBtn.addEventListener('click', addVariable);
+
+      // Copy button event
+      copyBtn.addEventListener('click', () => {
+        const text = replaceVariables();
+        if (text) {
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.classList.add('copied');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.classList.remove('copied');
+              copyBtn.textContent = 'Copy';
+            }, 2000);
+          }).catch(err => {
+            console.error('Failed to copy:', err);
+          });
+        }
+      });
 
       // Initial render
       render();
