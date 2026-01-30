@@ -3,6 +3,7 @@
   "displayName": "rename-preview",
   "description": "",
   "version": "1.0.0",
+  "repository": "https://github.com/SaidTorres3/live-refactor-vsix",
   "engines": {
     "vscode": "^1.67.0"
   },
