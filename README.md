@@ -2,6 +2,8 @@
 
 A powerful VS Code extension for live text refactoring with variable substitution. Preview your changes in real-time as you define variables and their replacement values.
 
+![Live Refactor Showcase](https://raw.githubusercontent.com/SaidTorres3/live-refactor-vsix/refs/heads/master/docs/images/v1.0.0/v1.0.0.png)
+
 ## Features
 
 - 🔄 **Real-time Preview**: See your text transformations instantly as you type
